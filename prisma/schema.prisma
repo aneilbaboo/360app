@@ -1,0 +1,145 @@
+// This is your Prisma schema file
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String   @id @default(uuid())
+  email         String   @unique
+  passwordHash  String?
+  oauthProvider String?
+  oauthId       String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  reviewRequests ReviewRequest[]
+  invitations    Invitation[]
+  submissions    ReviewSubmission[]
+  notifications  Notification[]
+
+  @@map("users")
+}
+
+enum RequestStatus {
+  OPEN
+  CLOSED
+  PROCESSING
+  COMPLETED
+}
+
+model ReviewRequest {
+  id              String        @id @default(uuid())
+  userId          String
+  title           String
+  questions       Json
+  minRespondents  Int           @default(10)
+  deadline        DateTime?
+  status          RequestStatus @default(OPEN)
+  shareableToken  String        @unique @default(uuid())
+  createdAt       DateTime      @default(now())
+  closedAt        DateTime?
+
+  user        User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  invitations Invitation[]
+  submissions ReviewSubmission[]
+  result      AIProcessingResult?
+
+  @@map("review_requests")
+}
+
+enum InvitationStatus {
+  PENDING
+  SUBMITTED
+  EXPIRED
+}
+
+model Invitation {
+  id              String           @id @default(uuid())
+  requestId       String
+  inviteeEmail    String?
+  inviteeUserId   String?
+  invitationToken String           @unique @default(uuid())
+  status          InvitationStatus @default(PENDING)
+  sentAt          DateTime         @default(now())
+  submittedAt     DateTime?
+
+  request    ReviewRequest      @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  inviteeUser User?             @relation(fields: [inviteeUserId], references: [id], onDelete: SetNull)
+  submission ReviewSubmission?
+
+  @@map("invitations")
+}
+
+model ReviewSubmission {
+  id             String   @id @default(uuid())
+  requestId      String
+  invitationId   String   @unique
+  reviewerUserId String?
+  responses      Json
+  isAnonymous    Boolean  @default(true)
+  submittedAt    DateTime @default(now())
+
+  request ReviewRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  invitation Invitation @relation(fields: [invitationId], references: [id], onDelete: Cascade)
+  reviewer User?        @relation(fields: [reviewerUserId], references: [id], onDelete: SetNull)
+
+  @@map("review_submissions")
+}
+
+enum AIProvider {
+  CLAUDE
+  OPENAI
+  PERPLEXITY
+}
+
+enum ProcessingStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+model AIProcessingResult {
+  id                String           @id @default(uuid())
+  requestId         String           @unique
+  provider          AIProvider
+  anonymizedSummary String           @db.Text
+  themes            Json
+  sentimentAnalysis Json
+  skillCategories   Json
+  actionableItems   Json
+  processingStatus  ProcessingStatus @default(PENDING)
+  processedAt       DateTime?
+  retryCount        Int              @default(0)
+
+  request ReviewRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+
+  @@map("ai_processing_results")
+}
+
+enum NotificationType {
+  MIN_REACHED
+  RESPONSE_RECEIVED
+  RESULTS_READY
+  REMINDER
+}
+
+model Notification {
+  id        String           @id @default(uuid())
+  userId    String
+  type      NotificationType
+  requestId String
+  message   String           @db.Text
+  read      Boolean          @default(false)
+  sentAt    DateTime         @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notifications")
+}
