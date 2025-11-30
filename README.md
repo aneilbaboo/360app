@@ -13,12 +13,22 @@ A comprehensive platform that enables users to request anonymized 360-degree rev
 
 ## Technology Stack
 
-- **Backend**: Node.js with Express and TypeScript
-- **Database**: PostgreSQL with Prisma ORM
+### Backend
+- **Node.js** with Express and TypeScript
+- **PostgreSQL** with Prisma ORM
 - **Authentication**: JWT, Passport (OAuth)
 - **AI Providers**: Claude (Anthropic), OpenAI, Perplexity
 - **Email**: Nodemailer with SendGrid support
 - **Security**: Helmet, CORS, bcrypt, rate limiting
+
+### Frontend
+- **React 18** with TypeScript
+- **Vite** - Build tool and dev server
+- **Tailwind CSS** - Styling
+- **React Router** - Client-side routing
+- **Recharts** - Data visualization
+- **React Hook Form** - Form management
+- **Axios** - HTTP client
 
 ## Prerequisites
 
@@ -34,7 +44,20 @@ A comprehensive platform that enables users to request anonymized 360-degree rev
 ```bash
 git clone <repository-url>
 cd 360app
+
+# Install backend dependencies
 npm install
+
+# Install frontend dependencies
+cd client
+npm install
+cd ..
+```
+
+Or use the convenience script:
+
+```bash
+npm run install:all
 ```
 
 ### 2. Configure Environment
@@ -80,18 +103,34 @@ npm run prisma:migrate
 npm run prisma:studio
 ```
 
-### 4. Start the Server
+### 4. Start the Application
+
+#### Development Mode
+
+In separate terminal windows:
 
 ```bash
-# Development mode with auto-reload
+# Terminal 1: Start backend server
 npm run dev
 
-# Production mode
+# Terminal 2: Start frontend dev server
+npm run dev:client
+```
+
+- Backend API: `http://localhost:3000`
+- Frontend: `http://localhost:5173`
+
+#### Production Mode
+
+```bash
+# Build both backend and frontend
 npm run build
+
+# Start the server (serves both API and frontend)
 npm start
 ```
 
-The server will start on `http://localhost:3000`
+The application will be available at `http://localhost:3000`
 
 ## API Documentation
 
@@ -320,7 +359,7 @@ All errors follow this standard format:
 
 ```
 360app/
-├── src/
+├── src/                  # Backend source code
 │   ├── config/           # Configuration files (Passport)
 │   ├── controllers/      # Route controllers
 │   ├── middleware/       # Express middleware
@@ -330,16 +369,33 @@ All errors follow this standard format:
 │   ├── types/           # TypeScript type definitions
 │   ├── utils/           # Utility functions
 │   └── server.ts        # Application entry point
+├── client/              # Frontend React app
+│   ├── src/
+│   │   ├── components/  # Reusable UI components
+│   │   ├── pages/       # Page components
+│   │   ├── contexts/    # React contexts
+│   │   ├── services/    # API services
+│   │   ├── types/       # TypeScript types
+│   │   └── utils/       # Utility functions
+│   ├── public/          # Static assets
+│   └── package.json     # Frontend dependencies
 ├── prisma/
 │   └── schema.prisma    # Database schema
 ├── .env.example         # Environment variables template
-├── package.json
+├── package.json         # Backend dependencies
 └── tsconfig.json
 ```
+
+See [client/README.md](client/README.md) for detailed frontend documentation.
 
 ### Running Tests
 
 ```bash
+# Backend tests
+npm test
+
+# Frontend tests (if configured)
+cd client
 npm test
 ```
 
@@ -408,9 +464,10 @@ DATABASE_URL=<production-database-url>
 JWT_SECRET=<strong-secret>
 AI_PROVIDER=<provider>
 ANTHROPIC_API_KEY=<key>
-FRONTEND_URL=<production-frontend-url>
 ALLOWED_ORIGINS=<comma-separated-origins>
 ```
+
+Note: In production mode, the backend serves the frontend static files from `client/dist`.
 
 ### Database
 
@@ -425,9 +482,16 @@ npx prisma generate
 ### Build and Start
 
 ```bash
+# Build both backend and frontend
 npm run build
+
+# Start the application
 npm start
 ```
+
+The application will serve:
+- API endpoints at `/api/v1/*`
+- Frontend application at all other routes
 
 ## License
 

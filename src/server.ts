@@ -2,6 +2,7 @@ import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
+import path from 'path';
 import passport from './config/passport';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler';
 import { generalRateLimiter } from './middleware/rateLimiter';
@@ -17,11 +18,26 @@ import notificationRoutes from './routes/notification.routes';
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Security middleware
-app.use(helmet());
+// Security middleware - Configure CSP for frontend assets
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'", "'unsafe-inline'"],
+        styleSrc: ["'self'", "'unsafe-inline'"],
+        imgSrc: ["'self'", 'data:', 'https:'],
+        connectSrc: ["'self'"],
+      },
+    },
+  })
+);
 
 // CORS configuration
-const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') || ['http://localhost:3000', 'http://localhost:3001'];
+const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') || [
+  'http://localhost:3000',
+  'http://localhost:5173',
+];
 app.use(
   cors({
     origin: (origin, callback) => {
@@ -58,7 +74,22 @@ app.use('/api/v1/invitations', invitationRoutes);
 app.use('/api/v1/reviews/submissions', reviewSubmissionRoutes);
 app.use('/api/v1/notifications', notificationRoutes);
 
-// 404 handler
+// Serve frontend static files in production
+if (process.env.NODE_ENV === 'production') {
+  const clientDistPath = path.join(__dirname, '../client/dist');
+  app.use(express.static(clientDistPath));
+
+  // Serve index.html for all non-API routes (SPA fallback)
+  app.get('*', (req, res, next) => {
+    if (!req.path.startsWith('/api/')) {
+      res.sendFile(path.join(clientDistPath, 'index.html'));
+    } else {
+      next();
+    }
+  });
+}
+
+// 404 handler for API routes
 app.use(notFoundHandler);
 
 // Error handler (must be last)
