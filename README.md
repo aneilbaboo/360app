@@ -13,12 +13,21 @@ A comprehensive platform that enables users to request anonymized 360-degree rev
 
 ## Technology Stack
 
-- **Backend**: Node.js with Express and TypeScript
-- **Database**: PostgreSQL with Prisma ORM
+### Backend
+- **Node.js** with Express and TypeScript
+- **PostgreSQL** with Prisma ORM
 - **Authentication**: JWT, Passport (OAuth)
 - **AI Providers**: Claude (Anthropic), OpenAI, Perplexity
 - **Email**: Nodemailer with SendGrid support
 - **Security**: Helmet, CORS, bcrypt, rate limiting
+
+### Frontend
+- **React 18** with TypeScript
+- **Vite** for fast development
+- **React Router** for navigation
+- **Axios** for API calls
+- **Tailwind CSS** for styling
+- **JWT authentication** with automatic token refresh
 
 ## Prerequisites
 
@@ -80,7 +89,7 @@ npm run prisma:migrate
 npm run prisma:studio
 ```
 
-### 4. Start the Server
+### 4. Start the Backend Server
 
 ```bash
 # Development mode with auto-reload
@@ -91,7 +100,23 @@ npm run build
 npm start
 ```
 
-The server will start on `http://localhost:3000`
+The backend server will start on `http://localhost:3000`
+
+### 5. Start the Frontend (in a new terminal)
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+The frontend will be available at `http://localhost:5173`
+
+Now you can:
+1. Register a new account at `http://localhost:5173/register`
+2. Create review requests
+3. Send invitations to reviewers
+4. View AI-powered results
 
 ## API Documentation
 
